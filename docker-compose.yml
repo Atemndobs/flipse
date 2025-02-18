@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: flipse-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    networks:
+      - flipse-network
+
+networks:
+  flipse-network:
+    driver: bridge

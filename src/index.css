@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Times New Roman", Times, serif;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply dark:text-white text-gray-900;
+  }
+}
+
+/* Theme specific styles */
+:root.dark {
+  background-color: rgb(3 7 18); /* bg-gray-950 */
+  color: white;
+}
+
+:root.light {
+  background-color: white;
+  color: rgb(17 24 39); /* text-gray-900 */
+}
+
+/* Ensure body takes up full height and inherits background */
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: inherit;
+  color: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
