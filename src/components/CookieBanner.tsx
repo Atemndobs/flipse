@@ -13,6 +13,10 @@ const CookieBanner = ({ onAccept, onDecline }: CookieBannerProps) => {
     const cookieConsent = localStorage.getItem('cookie-consent')
     if (!cookieConsent) {
       setIsVisible(true)
+    } else if (cookieConsent === 'accepted') {
+      onAccept()
+    } else if (cookieConsent === 'declined') {
+      onDecline()
     }
   }, [])
 
@@ -37,8 +41,8 @@ const CookieBanner = ({ onAccept, onDecline }: CookieBannerProps) => {
           <h3 className="text-lg font-semibold mb-2">We value your privacy</h3>
           <p className="text-sm text-gray-300">
             We use essential cookies to ensure the basic functionality of our website and to enhance your experience. 
-            This includes collecting anonymous usage data and location information to improve our services. 
-            By clicking "Accept", you consent to these essential cookies.
+            By clicking "Accept", you consent to our use of cookies and allow us to collect anonymous location data 
+            to improve our services. You can decline and still use our website with limited functionality.
           </p>
         </div>
         <div className="flex gap-3">

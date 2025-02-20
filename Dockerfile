@@ -9,10 +9,15 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code and env files
 COPY . .
 
 # Build the application
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_POSTHOG_KEY
+ARG VITE_POSTHOG_HOST
+
 RUN npm run build
 
 # Production stage

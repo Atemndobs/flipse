@@ -1,8 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef, FormEvent, useEffect } from 'react'
 import WaitlistModal from './WaitlistModal'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { UAParser } from 'ua-parser-js'
 import CookieBanner from './CookieBanner'
+import { usePostHog } from 'posthog-js/react'
+import ErrorBoundary from './ErrorBoundary'
 
 const videos = [
   'https://d3phaj0sisr2ct.cloudfront.net/site/videos/footer-videos/Fabric.mp4',
@@ -10,10 +12,10 @@ const videos = [
 
 interface VisitorData {
   session_id: string
-  referrer: string
-  user_agent: string
-  country: string | null
-  country_code: string | null
+  referrer?: string
+  user_agent?: string,
+  country?: string,
+  country_code?: string,
   metadata: {
     screen_resolution: string
     language: string
@@ -23,69 +25,15 @@ interface VisitorData {
   }
 }
 
-interface GeoResponse {
-  address: {
-    city: string
-    town: string
-    village: string
-    state: string
-    country_code: string
-  }
-}
-
-const getLocationData = async (): Promise<{ country: string | null; country_code: string | null }> => {
+// Moved trackVisit outside component since it's used in multiple places
+const trackVisit = async (supabase: SupabaseClient, includeLocation: boolean = false) => {
   try {
-    if ('geolocation' in navigator) {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 5000,
-          enableHighAccuracy: false
-        })
-      })
-      
-      const { latitude, longitude } = position.coords
-      
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-        {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'YourWebsite (your@email.com)'
-          }
-        }
-      )
-      
-      if (response.ok) {
-        const data: GeoResponse = await response.json()
-        if (data.address) {
-          return {
-            country: `${data.address.city || data.address.town || data.address.village}, ${data.address.state}`,
-            country_code: data.address.country_code?.toUpperCase() || null
-          }
-        }
-      }
-    }
-    return { country: null, country_code: null }
-  } catch (error) {
-    console.debug('Location data unavailable:', error)
-    return { country: null, country_code: null }
-  }
-}
-
-const trackVisit = async (supabase: SupabaseClient) => {
-  try {
-    let sessionId = localStorage.getItem('visitor_session_id')
-    if (!sessionId) {
-      sessionId = crypto.randomUUID()
-      localStorage.setItem('visitor_session_id', sessionId)
-    }
-
     const visitorData: VisitorData = {
-      session_id: sessionId,
-      referrer: document.referrer,
-      user_agent: navigator.userAgent,
-      country: null,
-      country_code: null,
+      session_id: crypto.randomUUID(),
+      referrer: 'static_referrer',
+      user_agent: 'static_user_agent',
+      country: '',
+      country_code: '',
       metadata: {
         screen_resolution: `${window.screen.width}x${window.screen.height}`,
         language: navigator.language,
@@ -95,72 +43,66 @@ const trackVisit = async (supabase: SupabaseClient) => {
       }
     }
 
-    // Only get location if user has accepted cookies
-    const cookieConsent = localStorage.getItem('cookie-consent')
-    if (cookieConsent === 'accepted') {
-      const locationData = await getLocationData()
-      visitorData.country = locationData.country
-      visitorData.country_code = locationData.country_code
+    console.log({
+      screen_resolution: `${window.screen.width}x${window.screen.height}`,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timestamp: new Date().toISOString(),
+      url: window.location.href
+    });
+    
+
+    if (includeLocation) {
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 5000,
+            maximumAge: 0,
+            enableHighAccuracy: false
+          });
+        });
+        
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`
+        );
+        const data = await response.json();
+        
+        if (data.address) {
+          visitorData.country = data.address.country;
+          visitorData.country_code = data.address.country_code?.toUpperCase();
+        }
+      } catch (error) {
+        // Silently handle geolocation errors - just continue without location data
+        console.log('Location access not available:', error);
+      }
     }
 
-    const { error: visitorError } = await supabase
+    const { data, error } = await supabase
       .from('visitors')
       .insert([visitorData])
+      .select();
 
-    if (visitorError) {
-      console.error('Error inserting visitor:', visitorError)
-    } else {
-      console.debug('Successfully tracked visit:', {
-        country: visitorData.country,
-        country_code: visitorData.country_code
-      })
+    if (error) {
+      throw error;
     }
+
+    console.log('Visitor tracked successfully:', data);
   } catch (error) {
-    console.error('Error in trackVisit:', error)
+    console.error('Error tracking visitor:', error);
   }
 }
 
 const Hero = () => {
-  const formRef = useRef<HTMLFormElement>(null)
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [submittedEmail, setSubmittedEmail] = useState('')
+  const [currentUrl] = useState(videos[0]) // Removed unused setter
+  const [isYouTube] = useState(false) // Removed unused setter
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hasInitializedTracking, setHasInitializedTracking] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [submittedEmail, setSubmittedEmail] = useState<string>('')
+  const formRef = useRef<HTMLFormElement>(null)
+  const posthog = usePostHog()
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length)
-    }, 2000)
-
-    // Only initialize tracking if we haven't done so yet
-    if (!hasInitializedTracking) {
-      const cookieConsent = localStorage.getItem('cookie-consent')
-      if (cookieConsent === 'accepted') {
-        const supabase = createClient(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_ANON_KEY
-        )
-        trackVisit(supabase)
-      }
-      setHasInitializedTracking(true)
-    }
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [hasInitializedTracking])
-
-  const getVideoUrl = (url: string) => {
-    if (url.includes('youtube')) {
-      const videoId = url.split('v=')[1]
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`
-    }
-    return url
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
@@ -169,9 +111,10 @@ const Hero = () => {
     const email = formData.get('email') as string
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-      const supabase = createClient(supabaseUrl, supabaseAnonKey)
+      const supabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      )
 
       // Get the visitor's session and country info
       const sessionId = localStorage.getItem('visitor_session_id')
@@ -226,22 +169,24 @@ const Hero = () => {
 
       // Handle the response
       if (insertError) {
-        // If it's a duplicate email (unique constraint violation), treat it as success
+        // If it's a duplicate email, treat it as success
         if (insertError.code === '23505') {
           setSubmittedEmail(email)
           setIsModalOpen(true)
           formRef.current?.reset()
           return
         }
+        console.log({insertError});
+        
         // For any other error, throw it
-        throw insertError
+        throw new Error('Failed to join waitlist. Please try again.')
       }
 
       // If we get here, the insert was successful
       setSubmittedEmail(email)
       setIsModalOpen(true)
       formRef.current?.reset()
-
+      
       // Update visitor record to mark as converted
       if (sessionId) {
         await supabase
@@ -255,32 +200,62 @@ const Hero = () => {
       setError(
         err instanceof Error 
           ? err.message 
-          : 'Unable to join waitlist. Please try again later.'
+          : 'An error occurred while joining the waitlist'
       )
     } finally {
       setIsLoading(false)
     }
   }
 
-  const currentUrl = getVideoUrl(videos[currentVideoIndex])
-  const isYouTube = currentUrl.includes('youtube')
-
   const handleCookieAccept = () => {
     const supabase = createClient(
       import.meta.env.VITE_SUPABASE_URL,
       import.meta.env.VITE_SUPABASE_ANON_KEY
     )
-    trackVisit(supabase)
+
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        // Geolocation permission granted
+        trackVisit(supabase, true);
+      },
+      () => {
+        // Geolocation permission denied or error
+        trackVisit(supabase, false);
+      }
+    );
   }
 
   const handleCookieDecline = () => {
-    // Still track the visit but without location data
     const supabase = createClient(
       import.meta.env.VITE_SUPABASE_URL,
       import.meta.env.VITE_SUPABASE_ANON_KEY
     )
-    trackVisit(supabase)
+    // Track visit without location data when cookies are declined
+    trackVisit(supabase, false)
+    
+    // Disable PostHog tracking
+    posthog?.opt_out_capturing()
   }
+
+  useEffect(() => {
+    const supabase = createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY
+    )
+    
+    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
+    
+    supabase
+      .from('visitors')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count, error }) => {
+        if (error) {
+          console.error('Supabase connection error:', error)
+        } else {
+          console.log('Supabase connection successful. Visitor count:', count)
+        }
+      })
+  }, [])
 
   return (
     <>
@@ -302,7 +277,7 @@ const Hero = () => {
               loop
               playsInline
             >
-              <source src={currentUrl} type={currentUrl.endsWith('webm') ? 'video/webm' : 'video/mp4'} />
+              <source src={currentUrl} type="video/mp4" />
             </video>
           )}
           <div className="absolute inset-0 bg-black/60" />
@@ -357,4 +332,10 @@ const Hero = () => {
   )
 }
 
-export default Hero
+export default function WrappedHero() {
+  return (
+    <ErrorBoundary>
+      <Hero />
+    </ErrorBoundary>
+  );
+}
