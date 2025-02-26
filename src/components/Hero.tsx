@@ -7,7 +7,10 @@ import { usePostHog } from 'posthog-js/react'
 import ErrorBoundary from './ErrorBoundary'
 
 const videos = [
-  'https://d3phaj0sisr2ct.cloudfront.net/site/videos/footer-videos/Fabric.mp4',
+  // 'https://d3phaj0sisr2ct.cloudfront.net/site/videos/footer-videos/Fabric.mp4',
+  // 'https://minio.goose-neon.ts.net/curator/video/4729196-hd_1920_1080_25fps.mp4',
+  'https://minio.goose-neon.ts.net/curator/video/11979239_2160_3840_60fps.mp4',
+  'https://minio.goose-neon.ts.net/curator/video/16472277-uhd_2160_3840_60fps.mp4',
 ]
 
 interface VisitorData {
