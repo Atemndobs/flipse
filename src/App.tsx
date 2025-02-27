@@ -48,6 +48,7 @@ const App = () => {
       <Router>
         <PostHogProvider>
           {isAdmin ? <Navbar /> : <div></div>}
+          <Navbar /> 
           <Routes>
             <Route path="/" element={
               <main>
