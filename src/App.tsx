@@ -1,7 +1,6 @@
 import './index.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+// import { useEffect, useState } from 'react'
 import Hero from './components/Hero'
 import Dashboard from './components/Dashboard'
 import AdminLogin from './components/AdminLogin'
@@ -17,31 +16,6 @@ import { PostHogProvider } from './context/PostHogProvider'
 
 const App = () => {
   const { theme } = useTheme()
-  // const [isAdmin, setIsAdmin] = useState(false)
-
-  // useEffect(() => {
-  //   checkAdminAuth()
-  // }, [])
-
-  // const checkAdminAuth = async () => {
-  //   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  //   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-  //   if (!supabaseUrl || !supabaseKey) {
-  //     console.error('Supabase credentials are not configured')
-  //     return
-  //   }
-
-  //   const supabase = createClient(supabaseUrl, supabaseKey)
-
-  //   try {
-  //     const { data: { session } } = await supabase.auth.getSession()
-  //     setIsAdmin(!!session)
-  //   } catch (error) {
-  //     console.error('Error checking auth:', error)
-  //     setIsAdmin(false)
-  //   }
-  // }
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-white text-gray-900'}`}>
