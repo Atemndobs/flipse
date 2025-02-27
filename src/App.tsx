@@ -17,31 +17,31 @@ import { PostHogProvider } from './context/PostHogProvider'
 
 const App = () => {
   const { theme } = useTheme()
-  const [isAdmin, setIsAdmin] = useState(false)
+  // const [isAdmin, setIsAdmin] = useState(false)
 
-  useEffect(() => {
-    checkAdminAuth()
-  }, [])
+  // useEffect(() => {
+  //   checkAdminAuth()
+  // }, [])
 
-  const checkAdminAuth = async () => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  // const checkAdminAuth = async () => {
+  //   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  //   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Supabase credentials are not configured')
-      return
-    }
+  //   if (!supabaseUrl || !supabaseKey) {
+  //     console.error('Supabase credentials are not configured')
+  //     return
+  //   }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+  //   const supabase = createClient(supabaseUrl, supabaseKey)
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsAdmin(!!session)
-    } catch (error) {
-      console.error('Error checking auth:', error)
-      setIsAdmin(false)
-    }
-  }
+  //   try {
+  //     const { data: { session } } = await supabase.auth.getSession()
+  //     setIsAdmin(!!session)
+  //   } catch (error) {
+  //     console.error('Error checking auth:', error)
+  //     setIsAdmin(false)
+  //   }
+  // }
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-white text-gray-900'}`}>
