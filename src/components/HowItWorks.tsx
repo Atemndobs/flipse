@@ -111,13 +111,25 @@ const HowItWorks = () => {
             Real-Time Ticket Search & Alerts
           </motion.h2>
           <motion.p 
-            className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto"
+            className="text-gray-600 dark:text-gray-400 text-2xl md:text-3xl max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            See how easy it is to find the best ticket deals and set up price alerts
+            <motion.span 
+              className="font-bold text-blue-600 dark:text-blue-400"
+              animate={{
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              How It Works
+            </motion.span>
           </motion.p>
         </div>
 

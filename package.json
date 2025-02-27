@@ -17,11 +17,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.5.1",
-    "react-router-dom": "^7.1.5",
+    "react-router": "^6.22.0",
+    "react-router-dom": "^6.22.0",
     "ua-parser-js": "^2.0.2"
   },
   "devDependencies": {
-    "@types/next": "^9.0.0",
     "@types/react": "^18.3.6",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

@@ -66,7 +66,7 @@ const Dashboard = () => {
 
       if (visitorError) throw visitorError
 
-      const convertedVisitors = visitorStats.filter(v => v.converted).length
+      const convertedVisitors = waitlistData.length
 
       setEntries(waitlistData)
 

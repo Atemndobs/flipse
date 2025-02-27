@@ -69,6 +69,7 @@ const trackVisit = async (supabase: SupabaseClient, includeLocation: boolean = f
           `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`
         );
         const data = await response.json();
+        console.log('Location data', data);
         
         if (data.address) {
           visitorData.country = data.address.country;
@@ -288,12 +289,11 @@ const Hero = () => {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            Your Ultimate Ticket Agent
+            Your Ultimate AI Ticket Agent
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto font-bold">
-            Get the best deals on NBA Playoffs, March Madness, concerts, and events. Real-time price alerts ensure you never miss out.
+          We use AI-powered technology to scan thousands of events, delivering real-time price alerts and unbeatable deals on NBA Playoffs, March Madness, concerts, and more directly to you. 
           </p>
-          
           {error && (
             <div className="mb-4 text-red-400 text-sm">
               {error}
