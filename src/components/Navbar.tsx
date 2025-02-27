@@ -104,37 +104,39 @@ const Navbar = () => {
                 : <div></div>}
             </div>
           </div>
-          <div className="md:hidden flex items-center space-x-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 rounded-lg transition-colors border border-gray-300 dark:border-gray-700"
-              title="Go to Dashboard"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={handleLogout}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 rounded-lg transition-colors border border-gray-300 dark:border-gray-700"
-              title="Sign Out"
-            >
-              Sign Out
-            </button>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              title="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <button
-              type="button"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-              title="Menu"
-            >
-              <Menu size={24} />
-            </button>
-          </div>
+          {isAdmin ?
+            <div className="md:hidden flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 rounded-lg transition-colors border border-gray-300 dark:border-gray-700"
+                title="Go to Dashboard"
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 rounded-lg transition-colors border border-gray-300 dark:border-gray-700"
+                title="Sign Out"
+              >
+                Sign Out
+              </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                title="Toggle Theme"
+              >
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <button
+                type="button"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                title="Menu"
+              >
+                <Menu size={24} />
+              </button>
+            </div>
+            : <div></div>}
         </div>
       </div>
     </nav>

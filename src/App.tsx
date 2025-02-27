@@ -47,7 +47,7 @@ const App = () => {
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-white text-gray-900'}`}>
       <Router>
         <PostHogProvider>
-          {isAdmin ? <Navbar /> : <div></div>}
+          {/* {isAdmin ? <Navbar /> : <div></div>} */}
           <Navbar /> 
           <Routes>
             <Route path="/" element={
